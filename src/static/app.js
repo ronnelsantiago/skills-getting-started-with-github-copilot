@@ -12,6 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      // Reset activity select but keep the placeholder option (first option)
+      if (activitySelect) {
+        const placeholder = activitySelect.querySelector('option[value=""]');
+        activitySelect.innerHTML = "";
+        if (placeholder) activitySelect.appendChild(placeholder);
+      }
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -27,7 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
                  <strong>Participants:</strong>
                  <ul class="participants-list">
                    ${details.participants
-                     .map((p) => `<li>${p}</li>`)
+                     .map(
+                       (p) =>
+                         `<li class="participant-item">${p} <button class="delete-btn" data-email="${p}">✖</button></li>`
+                     )
                      .join("")}
                  </ul>
                </div>`
@@ -48,6 +57,47 @@ document.addEventListener("DOMContentLoaded", () => {
         option.value = name;
         option.textContent = name;
         activitySelect.appendChild(option);
+
+        // Attach delete handlers for participant removal
+        activityCard.querySelectorAll(".delete-btn").forEach((btn) => {
+          btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const email = btn.dataset.email;
+
+            if (!confirm(`Are you sure you want to remove ${email} from ${name}?`)) {
+              return;
+            }
+
+            try {
+              const resp = await fetch(
+                `/activities/${encodeURIComponent(name)}/participants?email=${encodeURIComponent(
+                  email
+                )}`,
+                { method: "DELETE" }
+              );
+
+              const result = await resp.json();
+
+              if (resp.ok) {
+                messageDiv.textContent = result.message;
+                messageDiv.className = "success";
+                // Refresh activities to show updated participants
+                fetchActivities();
+              } else {
+                messageDiv.textContent = result.detail || "Failed to remove participant";
+                messageDiv.className = "error";
+              }
+
+              messageDiv.classList.remove("hidden");
+              setTimeout(() => messageDiv.classList.add("hidden"), 5000);
+            } catch (err) {
+              messageDiv.textContent = "Failed to remove participant. Please try again.";
+              messageDiv.className = "error";
+              messageDiv.classList.remove("hidden");
+              console.error("Error removing participant:", err);
+            }
+          });
+        });
       });
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
@@ -76,6 +126,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Refresh the activities list so the newly signed-up participant appears
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
