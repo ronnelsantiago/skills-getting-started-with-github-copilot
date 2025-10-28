@@ -92,9 +92,9 @@ section h3 {
 }
 
 .participants-list {
-  list-style: disc inside;
+  list-style: none;
   margin: 0;
-  padding-left: 14px;
+  padding-left: 0;
   max-height: 120px;
   overflow: auto;
 }
@@ -104,6 +104,28 @@ section h3 {
   font-size: 14px;
   color: #333;
   border-bottom: 1px dashed rgba(0,0,0,0.03);
+}
+
+/* Participant item layout and delete button */
+.participant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: #c62828;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.delete-btn:hover {
+  background: rgba(198,40,40,0.08);
 }
 
 /* Friendly hint when no participants */
